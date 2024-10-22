@@ -36,7 +36,8 @@ readChannelFile <- function(workingDirectory,
                 "channel_sdmorph_yr.txt",
                 "lsunit_wb_day.txt",
                 "lsunit_wb_mon.txt",
-                "lsunit_wb_yr.txt")
+                "lsunit_wb_yr.txt",
+               "basin_wb_mon.txt")
   setwd("/scratch/s2110964")
   filePath <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber), fileName)
  
