@@ -157,7 +157,7 @@ setwd("/scratch/s2110964/")
   setwd(file.path(workingDirectory, paste0('TxtInOut_', coreNumber)))
   # Get directory where new TxtInOut files are saved
   toDir <- getwd()
-
+cat("Files in current directory:", list.files(), "\n")
   # Number of parameter sets
   if(is.vector(subParameterSet)){
     subParameterSet <- matrix(subParameterSet, nrow = 1)
