@@ -84,7 +84,7 @@ runSWATpar <- function(workingDirectory,
     cl <- parallel::makeCluster(ncores)
     doParallel::registerDoParallel(cl)
     foreach::foreach(core = 1:ncores, .combine = 'c') %dopar% {
-    setwd("/scratch/s2110964")
+    
       
       runSWATSequential(core,
                         workingDirectory,
