@@ -84,7 +84,11 @@ runSWATpar <- function(workingDirectory,
     cl <- parallel::makeCluster(ncores)
     doParallel::registerDoParallel(cl)
     foreach::foreach(core = 1:ncores, .combine = 'c') %dopar% {
-    
+       # Prints the current working directory
+  cat("Current working directory is: ", getwd(), "\n")
+  
+  # Pause and wait for the user to press Enter
+  readline(prompt = "Press [Enter] to continue...")
       
       runSWATSequential(core,
                         workingDirectory,
@@ -149,6 +153,11 @@ runSWATSequential <- function(coreNumber,
                               firstRun,
                               readOutputScript = NULL){
 setwd("/scratch/s2110964/")
+   # Prints the current working directory
+  cat("Current working directory is: ", getwd(), "\n")
+  
+  # Pause and wait for the user to press Enter
+  readline(prompt = "Press [Enter] to continue...")
   if (!is.null(readOutputScript)){
     source(readOutputScript)
   }
