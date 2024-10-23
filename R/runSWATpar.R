@@ -148,7 +148,7 @@ runSWATSequential <- function(coreNumber,
                               fromToDate,
                               firstRun,
                               readOutputScript = NULL){
-
+setwd("/scratch/s2110964/")
   if (!is.null(readOutputScript)){
     source(readOutputScript)
   }
