@@ -85,10 +85,7 @@ runSWATpar <- function(workingDirectory,
     doParallel::registerDoParallel(cl)
     foreach::foreach(core = 1:ncores, .combine = 'c') %dopar% {
        # Prints the current working directory
-  cat("Current working directory is: ", getwd(), "\n")
-  
-  # Pause and wait for the user to press Enter
-  readline(prompt = "Press [Enter] to continue...")
+
       
       runSWATSequential(core,
                         workingDirectory,
@@ -152,12 +149,9 @@ runSWATSequential <- function(coreNumber,
                               fromToDate,
                               firstRun,
                               readOutputScript = NULL){
-setwd("/scratch/s2110964/")
+
    # Prints the current working directory
-  cat("Current working directory is: ", getwd(), "\n")
-  
-  # Pause and wait for the user to press Enter
-  readline(prompt = "Press [Enter] to continue...")
+
   if (!is.null(readOutputScript)){
     source(readOutputScript)
   }
@@ -177,7 +171,10 @@ cat("Files in current directory:", list.files(), "\n")
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-
+  cat("Current working directory is: ", getwd(), "\n")
+  
+  # Pause and wait for the user to press Enter
+  readline(prompt = "Press [Enter] to continue...")
     # If this is SWAT project
     if (isTRUE(caliParam$file[1] != "calibration.cal")){
 
