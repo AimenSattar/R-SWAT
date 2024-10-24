@@ -84,9 +84,7 @@ runSWATpar <- function(workingDirectory,
     cl <- parallel::makeCluster(ncores)
     doParallel::registerDoParallel(cl)
     foreach::foreach(core = 1:ncores, .combine = 'c') %dopar% {
-       # Prints the current working directory
-
-      
+     
       runSWATSequential(core,
                         workingDirectory,
                         swatExe,
@@ -150,14 +148,13 @@ runSWATSequential <- function(coreNumber,
                               firstRun,
                               readOutputScript = NULL){
 
-   # Prints the current working directory
 
   if (!is.null(readOutputScript)){
     source(readOutputScript)
   }
 
   # Set working directory
-  setwd(file.path(workingDirectory, paste0('TxtInOut_', coreNumber)))
+  setwd(paste0("/scratch/s2110964/",workingDirectory,'/TxtInOut_', coreNumber))
   # Get directory where new TxtInOut files are saved
   toDir <- getwd()
 cat("Files in current directory:", list.files(), "\n")
@@ -171,7 +168,7 @@ cat("Files in current directory:", list.files(), "\n")
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-setwd(file.path("/scratch/s2110964", workingDirectory, paste0('TxtInOut_', core_num)))
+setwd(paste0("/scratch/s2110964/",workingDirectory,'/TxtInOut_', coreNumber))
     cat("Current working directory is: ", getwd(), "\n")
   
   # Pause and wait for the user to press Enter
