@@ -171,8 +171,8 @@ cat("Files in current directory:", list.files(), "\n")
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-    setwd(file.path(workingDirectory, paste0('TxtInOut_', coreNumber)))
-  cat("Current working directory is: ", getwd(), "\n")
+setwd(file.path("/scratch/s2110964", workingDirectory, paste0('TxtInOut_', core_num)))
+    cat("Current working directory is: ", getwd(), "\n")
   
   # Pause and wait for the user to press Enter
  # readline(prompt = "Press [Enter] to continue...")
