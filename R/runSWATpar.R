@@ -175,7 +175,7 @@ cat("Files in current directory:", list.files(), "\n")
   cat("Current working directory is: ", getwd(), "\n")
   
   # Pause and wait for the user to press Enter
-  readline(prompt = "Press [Enter] to continue...")
+ # readline(prompt = "Press [Enter] to continue...")
     # If this is SWAT project
     if (isTRUE(caliParam$file[1] != "calibration.cal")){
 
