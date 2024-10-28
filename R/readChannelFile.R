@@ -38,7 +38,7 @@ readChannelFile <- function(workingDirectory,
                 "lsunit_wb_mon.txt",
                 "lsunit_wb_yr.txt",
                "basin_wb_mon.txt")
-  setwd("/scratch/s2110964")
+  setwd(home)
   filePath <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber), fileName)
  
   # Get file content/data
