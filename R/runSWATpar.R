@@ -154,7 +154,7 @@ runSWATSequential <- function(coreNumber,
   }
 
   # Set working directory
-  setwd(paste0("/scratch/s2110964/",workingDirectory,'/TxtInOut_', coreNumber))
+  setwd(paste0(home,workingDirectory,'/TxtInOut_', coreNumber))
   # Get directory where new TxtInOut files are saved
   toDir <- getwd()
 cat("Files in current directory:", list.files(), "\n")
@@ -168,7 +168,7 @@ cat("Files in current directory:", list.files(), "\n")
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-setwd(paste0("/scratch/s2110964/",workingDirectory,'/TxtInOut_', coreNumber))
+setwd(paste0(home,workingDirectory,'/TxtInOut_', coreNumber))
     cat("Current working directory is: ", getwd(), "\n")
   
   # Pause and wait for the user to press Enter
