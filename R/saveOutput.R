@@ -96,7 +96,23 @@ saveOutput <- function(workingDirectory,
       warnings("Unkown output files, please modify saveOutput function")
     }
   }
+if (fileType[i] == "userReadSwatOutput"){
+    # Define output directory
+  outputDirectory <- file.path("/scratch/s2110964", workingDirectory, "Output", paste0("Core_", coreNumber))
 
+  # Ensure the directory exists
+  if(!dir.exists(outputDirectory)) dir.create(outputDirectory, recursive = TRUE)
+
+  for (i in 1:length(output)){
+    OutputFileName <- file.path(outputDirectory, paste0('out_var_', i, '.csv'))
+
+    # Remove first row and use the new first row as column names if it's the first run
+    output_df <- output[[i]]
+
+    # Write output as CSV
+    write.csv(output_df, OutputFileName, row.names = FALSE)
+  }
+} else {
   # Save output
   outputDirectory <- file.path("/scratch/s2110964",workingDirectory, "Output", paste0("Core_", coreNumber))
 
