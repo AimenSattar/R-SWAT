@@ -13,6 +13,15 @@
 #'
 #' @export
 
-userReadSwatOutput <- function(){
-  output <- NA
-  }
+
+   userReadSwatOutput <- function(workingDirectory,
+                               coreNumber,
+                               fileName,
+                               output){
+    
+    
+    filePath <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber), fileName)
+    output <- read.table(filePath, header = FALSE, sep = "", skip = 2)
+    return(output)
+}
+  
