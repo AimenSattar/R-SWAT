@@ -101,7 +101,8 @@ if (fileType[i] == "userReadSwatOutput"){
   outputDirectory <- file.path("/scratch/s2110964", workingDirectory, "Output", paste0("Core_", coreNumber))
 
   # Ensure the directory exists
-  if(!dir.exists(outputDirectory)) dir.create(outputDirectory, recursive = TRUE)
+  if(!dir.exists(outputDirectory)) 
+    dir.create(outputDirectory, recursive = TRUE)
  
     OutputFileName <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
 
@@ -132,6 +133,5 @@ if (fileType[i] == "userReadSwatOutput"){
                 row.names = FALSE, col.names = FALSE)
 
   }
-
-
+}
 }
