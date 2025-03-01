@@ -94,7 +94,7 @@ saveOutput <- function(workingDirectory,
     
     
     filePath <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber), fileName)
-    output <- read.table(filePath, header = TRUE, sep = "", skip = 1)
+    output <- read.table(filePath, header = FALSE, sep = "", skip = 2)
     return(output)
 }
       userExtractData <- userReadSwatOutput(workingDirectory,
