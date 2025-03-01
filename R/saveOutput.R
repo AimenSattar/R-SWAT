@@ -85,9 +85,7 @@ saveOutput <- function(workingDirectory,
                                 getRchNumber(rchNumber[i]),
                                 output)
 
-    } else if (fileType[i] == "userReadSwatOutput"){
-      workingDir <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber))
-     
+    } else if (fileType[i] == "userReadSwatOutput"){     
       userExtractData <- userReadSwatOutput(workingDirectory,
                                coreNumber,
                                fileName,
