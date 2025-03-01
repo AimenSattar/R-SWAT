@@ -157,7 +157,7 @@ runSWATSequential <- function(coreNumber,
   setwd(paste0(workingDirectory,'/TxtInOut_', coreNumber))
   # Get directory where new TxtInOut files are saved
   toDir <- getwd()
-cat("Files in current directory:", list.files(), "\n")
+
   # Number of parameter sets
   if(is.vector(subParameterSet)){
     subParameterSet <- matrix(subParameterSet, nrow = 1)
@@ -168,11 +168,10 @@ cat("Files in current directory:", list.files(), "\n")
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-setwd(paste0(home,workingDirectory,'/TxtInOut_', coreNumber))
+setwd(paste0(workingDirectory,'/TxtInOut_', coreNumber))
     cat("Current working directory is: ", getwd(), "\n")
   
-  # Pause and wait for the user to press Enter
- # readline(prompt = "Press [Enter] to continue...")
+  
     # If this is SWAT project
     if (isTRUE(caliParam$file[1] != "calibration.cal")){
 
