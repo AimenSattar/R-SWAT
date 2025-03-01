@@ -88,7 +88,7 @@ saveOutput <- function(workingDirectory,
     } else if (fileType[i] == "userReadSwatOutput"){     
       output <- userReadSwatOutput(workingDirectory,
                                coreNumber,
-                               fileName,
+                               fileName[i],
                                output)
      
 
