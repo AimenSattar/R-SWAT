@@ -21,7 +21,7 @@
     
     
     filePath <- paste0("/scratch/s2110964/",workingDirectory, paste0("/TxtInOut_", coreNumber,"/"), fileName)
-    output <- read.table(filePath, header = FALSE, sep = "", skip = 2)
+    output <- read.table(filePath, header = TRUE, sep = "", skip = 1)
     return(output)
 }
   
