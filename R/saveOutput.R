@@ -98,7 +98,7 @@ saveOutput <- function(workingDirectory,
   }
 
   # Save output
-  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
+  outputDirectory <- file.path("/scratch/s2110964",workingDirectory, "Output", paste0("Core_", coreNumber))
 
   # Create directory if it does not exist
   if(!dir.exists(outputDirectory)) dir.create(outputDirectory)
