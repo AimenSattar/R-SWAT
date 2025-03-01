@@ -86,11 +86,11 @@ saveOutput <- function(workingDirectory,
                                 output)
 
     } else if (fileType[i] == "userReadSwatOutput"){     
-      userExtractData <- userReadSwatOutput(workingDirectory,
+      output <- userReadSwatOutput(workingDirectory,
                                coreNumber,
                                fileName,
                                output)
-      output <- c(userExtractData)
+     
 
     } else {
       warnings("Unkown output files, please modify saveOutput function")
