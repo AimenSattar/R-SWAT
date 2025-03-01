@@ -96,22 +96,31 @@ saveOutput <- function(workingDirectory,
       warnings("Unkown output files, please modify saveOutput function")
     }
   }
-if (fileType[i] == "userReadSwatOutput"){
-    # Define output directory
+if (fileType[i] == "userReadSwatOutput") {
+  # Define output directory
   outputDirectory <- file.path("/scratch/s2110964", workingDirectory, "Output", paste0("Core_", coreNumber))
 
   # Ensure the directory exists
-  if(!dir.exists(outputDirectory)) 
+  if (!dir.exists(outputDirectory)) 
     dir.create(outputDirectory, recursive = TRUE)
  
-    OutputFileName <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
+  OutputFileName <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
 
-    # Remove first row and use the new first row as column names if it's the first run
-    output_df <- output
+  # Prepare the output dataframe
+  output_df <- output
 
-    # Write output as CSV
+  # Check if the file already exists
+  file_exists <- file.exists(OutputFileName)
+
+  # Write output as CSV
+  if (firstRun || !file_exists) {
+    # For the first run or if the file doesn't exist, write with header
     write.csv(output_df, OutputFileName, row.names = FALSE)
-  
+  } else {
+    # For subsequent runs, append without header
+    write.table(output_df, OutputFileName, sep = ",", row.names = FALSE, 
+                col.names = FALSE, append = TRUE)
+  }
 } else {
   # Save output
   outputDirectory <- file.path("/scratch/s2110964",workingDirectory, "Output", paste0("Core_", coreNumber))
