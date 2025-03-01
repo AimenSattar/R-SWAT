@@ -168,8 +168,7 @@ runSWATSequential <- function(coreNumber,
 
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
-setwd(paste0(workingDirectory,'/TxtInOut_', coreNumber))
-    cat("Current working directory is: ", getwd(), "\n")
+    
   
   
     # If this is SWAT project
