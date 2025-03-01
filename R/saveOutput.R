@@ -87,9 +87,21 @@ saveOutput <- function(workingDirectory,
 
     } else if (fileType[i] == "userReadSwatOutput"){
       workingDir <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber))
-      setwd(workingDir)
-      userExtractData <- userReadSwatOutput()
-      output <- c(output, userExtractData)
+      userReadSwatOutput <- function(workingDirectory,
+                               coreNumber,
+                               fileName,
+                               output){
+    
+    
+    filePath <- file.path(workingDirectory, paste0("TxtInOut_", coreNumber), fileName)
+    output <- read.table(filePath, header = TRUE, sep = "", skip = 1)
+    return(output)
+}
+      userExtractData <- userReadSwatOutput(workingDirectory,
+                               coreNumber,
+                               fileName,
+                               output)
+      output <- c(userExtractData)
 
     } else {
       warnings("Unkown output files, please modify saveOutput function")
