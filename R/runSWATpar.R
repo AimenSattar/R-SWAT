@@ -229,7 +229,7 @@ runSWATSequential <- function(coreNumber,
                 Sys.time(),
                 sep =''
     ),
-    file= file.path(workingDirectory, 'Output', 'CurrentSimulationReport.log'),
+    file= file.path("/scratch/s2110964",workingDirectory, 'Output', 'CurrentSimulationReport.log'),
     append=TRUE
     )
   }
