@@ -29,6 +29,7 @@ updateCalibrationFile <- function(paraSelection, parameterValue, currentDirector
   paraSelection[,2] <- gsub("replace", "absval", paraSelection[,2])
   paraSelection[,2] <- gsub("relative", "relchg", paraSelection[,2])
   paraSelection[,2] <- gsub("absolute", "abschg", paraSelection[,2])
+  paraSelection[,2] <- gsub("percent", "pctchg", paraSelection[,2])
 
   # Remove the extension e.g., .hru in the parameter selection data
   paraName <- strsplit(trimws(paraSelection[,c(1)]), '[.]')
