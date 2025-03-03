@@ -15,7 +15,7 @@
 updateCalibrationFile <- function(paraSelection, parameterValue, currentDirectory){
 
   # condition type
-  conTyp <- c("hgs=", "texture=", "plant=", "landuse=", "region=", "region_lte=")
+  conTyp <- c("hgs=", "texture=", "plt=", "landuse=", "region=", "region_lte=")
 
 
   fileContent <- c()
