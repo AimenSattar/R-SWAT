@@ -98,7 +98,7 @@ saveOutput <- function(workingDirectory,
   }
 if (fileType[i] == "userReadSwatOutput") {
   # Define output directory
-  outputDirectory <- file.path("/scratch/s2110964", workingDirectory, "Output", paste0("Core_", coreNumber))
+  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
 
   # Ensure the directory exists
   if (!dir.exists(outputDirectory)) 
@@ -123,7 +123,7 @@ if (fileType[i] == "userReadSwatOutput") {
   }
 } else {
   # Save output
-  outputDirectory <- file.path("/scratch/s2110964",workingDirectory, "Output", paste0("Core_", coreNumber))
+  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
 
   # Create directory if it does not exist
   if(!dir.exists(outputDirectory)) dir.create(outputDirectory)
