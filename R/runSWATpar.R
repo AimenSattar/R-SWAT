@@ -196,6 +196,7 @@ runSWATSequential <- function(coreNumber,
 
     # Check platform
     if(.Platform$OS.type == "unix") {
+      system(paste0("chmod +x ", exeFile))
       system(paste0("./", exeFile))
     } else {
       system(exeFile)
