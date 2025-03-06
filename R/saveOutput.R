@@ -103,9 +103,11 @@ if (fileType[i] == "userReadSwatOutput") {
   # Ensure the directory exists
   if (!dir.exists(outputDirectory)) 
     dir.create(outputDirectory, recursive = TRUE)
- 
+ if(fileName=="basin_crop_yld_yr.txt"){
   OutputFileName <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
-
+}else{
+     OutputFileName <- file.path(outputDirectory, paste0('out_var_irrigation_', i, '.csv'))
+   }
   # Prepare the output dataframe
   output_df <- output
 
