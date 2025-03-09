@@ -35,7 +35,8 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     
     # Select required columns using dplyr
     irrigation <- irrigation %>% 
-      dplyr::select(yr, unit, irr)
+      dplyr::select(yr, unit, irr)%>%
+    mutate(unit= as.numeric(unit))
     
     # Read HRU file - simpler approach
     hru_file <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), "hru-data.hru")
@@ -44,7 +45,8 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     # Filter unwanted land use types using dplyr
     hru_filtered <- hru %>%
       dplyr::select(id, lu_mgt) %>%
-      dplyr::filter(!lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum"))
+      dplyr::filter(!lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum"))%>%
+    mutate(id= as.numeric(id))
     
     # Join irrigation and HRU data using dplyr inner_join
     result <- irrigation %>%
@@ -52,6 +54,6 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
       dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
       dplyr::select(unit, yr, irr, lu_mgt)
     
-    return(result)
+    return(output)
   }
 }
