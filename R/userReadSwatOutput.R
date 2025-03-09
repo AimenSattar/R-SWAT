@@ -51,7 +51,8 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     output <- irrigation %>%
       dplyr::inner_join(hru_filtered, by = c("unit" = "id")) %>%
       dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
-      dplyr::select(unit, yr, irr, lu_mgt)
+      dplyr::select(unit, yr, irr, lu_mgt)%>%
+    mutate(irr = as.numeric(irr))
 
         # Group by lu_mgt and year, calculate average irrigation
     output <- output %>%
