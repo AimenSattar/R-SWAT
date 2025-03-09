@@ -54,45 +54,68 @@ saveOutput <- function(workingDirectory,
                      "basin_wb_mon.txt", "basin_wb_yr.txt")
 
   for (i in 1:length(fileType)) {
-    # Initialize output for this file type
+    # Initialize output for this iteration
     output <- list()
     
-    # Process current file
+    # Process current file type
     if (fileType[i] == "watout.dat") {
-      output <- readWatoutFile(workingDirectory,
-                               coreNumber,
-                               fileName[i],
-                               fromToDate,
-                               as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
-                               fileCioInfo,
-                               output)
-                               
+      output <- tryCatch({
+        readWatoutFile(workingDirectory,
+                      coreNumber,
+                      fileName[i],
+                      fromToDate,
+                      as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
+                      fileCioInfo,
+                      output)
+      }, error = function(e) {
+        warning(paste("Error reading", fileName[i], ":", e$message))
+        return(list())
+      })
     } else if (fileType[i] %in% c("output.rch", "output.sub", "output.hru")) {
-      output <- readOutputRchFile(workingDirectory,
-                                  coreNumber,
-                                  fileName[i],
-                                  fromToDate,
-                                  as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
-                                  fileCioInfo,
-                                  getRchNumber(rchNumber[i]),
-                                  output)
-                                  
+      output <- tryCatch({
+        readOutputRchFile(workingDirectory,
+                          coreNumber,
+                          fileName[i],
+                          fromToDate,
+                          as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
+                          fileCioInfo,
+                          getRchNumber(rchNumber[i]),
+                          output)
+      }, error = function(e) {
+        warning(paste("Error reading", fileName[i], ":", e$message))
+        return(list())
+      })
     } else if (fileType[i] %in% swatPlusFiles) {
-      output <- readChannelFile(workingDirectory,
-                                coreNumber,
-                                fileName[i],
-                                fromToDate,
-                                as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
-                                fileCioInfo,
-                                getRchNumber(rchNumber[i]),
-                                output)
-                                
+      output <- tryCatch({
+        readChannelFile(workingDirectory,
+                        coreNumber,
+                        fileName[i],
+                        fromToDate,
+                        as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
+                        fileCioInfo,
+                        getRchNumber(rchNumber[i]),
+                        output)
+      }, error = function(e) {
+        warning(paste("Error reading", fileName[i], ":", e$message))
+        return(list())
+      })
     } else if (fileType[i] == "userReadSwatOutput") {
-      output <- userReadSwatOutput(workingDirectory,
-                                  coreNumber,
-                                  fileName[i],
-                                  output)
-                                  
+      output <- tryCatch({
+        userReadSwatOutput(workingDirectory,
+                          coreNumber,
+                          fileName[i],
+                          output)
+      }, error = function(e) {
+        warning(paste("Error reading", fileName[i], ":", e$message))
+        return(list())
+      })
+      
+      # Skip to next iteration if we got an error
+      if (length(output) == 0 || (is.data.frame(output) && nrow(output) == 0)) {
+        warning(paste("Skipping output processing for", fileName[i], "due to empty data"))
+        next
+      }
+      
       # Handle custom output format for userReadSwatOutput
       if (fileName[i] == "basin_crop_yld_yr.txt") {
         outputFile <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
@@ -102,18 +125,28 @@ saveOutput <- function(workingDirectory,
       
       file_exists <- file.exists(outputFile)
       
-      if (firstRun || !file_exists) {
-        write.csv(output, outputFile, row.names = FALSE)
-      } else {
-        write.table(output, outputFile, sep = ",", row.names = FALSE, 
-                    col.names = FALSE, append = TRUE)
-      }
+      # Write output as CSV
+      tryCatch({
+        if (firstRun || !file_exists) {
+          write.csv(output, outputFile, row.names = FALSE)
+        } else {
+          write.table(output, outputFile, sep = ",", row.names = FALSE, 
+                      col.names = FALSE, append = TRUE)
+        }
+      }, error = function(e) {
+        warning(paste("Error writing to", outputFile, ":", e$message))
+      })
       
       # Skip standard output processing for this file type
       next
-      
     } else {
-      warning("Unknown output files, please modify saveOutput function")
+      warning(paste("Unknown output file type:", fileType[i]))
+      next
+    }
+    
+    # Skip to next iteration if we got an error or empty output
+    if (length(output) == 0) {
+      warning(paste("Skipping output processing for", fileName[i], "due to empty data"))
       next
     }
     
@@ -125,13 +158,16 @@ saveOutput <- function(workingDirectory,
         file.create(outputFile)
       }
       
-      # Write simulation number
-      write.table(as.character(simulationNumber), outputFile, append = TRUE,
-                  row.names = FALSE, col.names = FALSE)
-      
-      # Write simulated data
-      write.table(output[[j]], outputFile, append = TRUE, sep = '\t',
-                  row.names = FALSE, col.names = FALSE)
+      # Write simulation number and data
+      tryCatch({
+        write.table(as.character(simulationNumber), outputFile, append = TRUE,
+                    row.names = FALSE, col.names = FALSE)
+        
+        write.table(output[[j]], outputFile, append = TRUE, sep = '\t',
+                    row.names = FALSE, col.names = FALSE)
+      }, error = function(e) {
+        warning(paste("Error writing to", outputFile, ":", e$message))
+      })
     }
   }
 }
