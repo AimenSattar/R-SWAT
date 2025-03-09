@@ -31,7 +31,7 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     
     # Read HRU file
     hru_file <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), "hru-data.hru")
-    hru <- read.table(hru_file, header = TRUE, sep = "", skip = 2)
+    hru <- read.table(hru_file, header = TRUE, sep = "", skip = 1)
     
     # Process HRU data
     hru_filtered <- hru %>%
