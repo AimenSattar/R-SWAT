@@ -1,4 +1,3 @@
-#'
 #' Save output of SWAT/SWAT+ after each model run
 #'
 #' @inherit runSWATpar return
@@ -38,10 +37,13 @@ saveOutput <- function(workingDirectory,
                        rchNumber,
                        fileCioInfo,
                        simulationNumber,
-                       firstRun){  #for output file name
-
-  # Set output as list object
-  output <- list()
+                       firstRun) {
+  
+  # Create output directory once
+  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
+  if (!dir.exists(outputDirectory)) {
+    dir.create(outputDirectory, recursive = TRUE)
+  }
 
   # SWAT+ output files
   swatPlusFiles <- c("channel_sd_day.txt", "channel_sd_mon.txt",
@@ -51,11 +53,12 @@ saveOutput <- function(workingDirectory,
                      "lsunit_wb_yr.txt","basin_wb_day.txt",
                      "basin_wb_mon.txt", "basin_wb_yr.txt")
 
-  for (i in 1:length(fileType)){
-
-    if (fileType[i] == "watout.dat"){
-
-      # Read from watout.dat file type
+  for (i in 1:length(fileType)) {
+    # Initialize output for this file type
+    output <- list()
+    
+    # Process current file
+    if (fileType[i] == "watout.dat") {
       output <- readWatoutFile(workingDirectory,
                                coreNumber,
                                fileName[i],
@@ -63,8 +66,8 @@ saveOutput <- function(workingDirectory,
                                as.numeric(strsplit(colNumber[i],split = ",")[[1]]),
                                fileCioInfo,
                                output)
-
-    } else if (fileType[i] %in% c("output.rch", "output.sub", "output.hru")){
+                               
+    } else if (fileType[i] %in% c("output.rch", "output.sub", "output.hru")) {
       output <- readOutputRchFile(workingDirectory,
                                   coreNumber,
                                   fileName[i],
@@ -73,9 +76,8 @@ saveOutput <- function(workingDirectory,
                                   fileCioInfo,
                                   getRchNumber(rchNumber[i]),
                                   output)
-
-    } else if (fileType[i] %in% swatPlusFiles){
-
+                                  
+    } else if (fileType[i] %in% swatPlusFiles) {
       output <- readChannelFile(workingDirectory,
                                 coreNumber,
                                 fileName[i],
@@ -84,65 +86,52 @@ saveOutput <- function(workingDirectory,
                                 fileCioInfo,
                                 getRchNumber(rchNumber[i]),
                                 output)
-
-    } else if (fileType[i] == "userReadSwatOutput"){     
+                                
+    } else if (fileType[i] == "userReadSwatOutput") {
       output <- userReadSwatOutput(workingDirectory,
-                               coreNumber,
-                               fileName[i],
-                               output)
-     
-
+                                  coreNumber,
+                                  fileName[i],
+                                  output)
+                                  
+      # Handle custom output format for userReadSwatOutput
+      if (fileName[i] == "basin_crop_yld_yr.txt") {
+        outputFile <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
+      } else {
+        outputFile <- file.path(outputDirectory, paste0('out_var_irrigation_', i, '.csv'))
+      }
+      
+      file_exists <- file.exists(outputFile)
+      
+      if (firstRun || !file_exists) {
+        write.csv(output, outputFile, row.names = FALSE)
+      } else {
+        write.table(output, outputFile, sep = ",", row.names = FALSE, 
+                    col.names = FALSE, append = TRUE)
+      }
+      
+      # Skip standard output processing for this file type
+      next
+      
     } else {
-      warnings("Unkown output files, please modify saveOutput function")
+      warning("Unknown output files, please modify saveOutput function")
+      next
+    }
+    
+    # Standard output processing for non-userReadSwatOutput file types
+    for (j in 1:length(output)) {
+      outputFile <- file.path(outputDirectory, paste0('out_var_', j, '.txt'))
+      
+      if (firstRun) {
+        file.create(outputFile)
+      }
+      
+      # Write simulation number
+      write.table(as.character(simulationNumber), outputFile, append = TRUE,
+                  row.names = FALSE, col.names = FALSE)
+      
+      # Write simulated data
+      write.table(output[[j]], outputFile, append = TRUE, sep = '\t',
+                  row.names = FALSE, col.names = FALSE)
     }
   }
-if (fileType[i] == "userReadSwatOutput") {
-  # Define output directory
-  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
-
-  # Ensure the directory exists
-  if (!dir.exists(outputDirectory)) 
-    dir.create(outputDirectory, recursive = TRUE)
- if(fileName=="basin_crop_yld_yr.txt"){
-  OutputFileName <- file.path(outputDirectory, paste0('out_var_yield_', i, '.csv'))
-}else{
-     OutputFileName <- file.path(outputDirectory, paste0('out_var_irrigation_', i, '.csv'))
-   }
-  # Prepare the output dataframe
-  output_df <- output
-
-  # Check if the file already exists
-  file_exists <- file.exists(OutputFileName)
-
-  # Write output as CSV
-  if (firstRun || !file_exists) {
-    # For the first run or if the file doesn't exist, write with header
-    write.csv(output_df, OutputFileName, row.names = FALSE)
-  } else {
-    # For subsequent runs, append without header
-    write.table(output_df, OutputFileName, sep = ",", row.names = FALSE, 
-                col.names = FALSE, append = TRUE)
-  }
-} else {
-  # Save output
-  outputDirectory <- file.path(workingDirectory, "Output", paste0("Core_", coreNumber))
-
-  # Create directory if it does not exist
-  if(!dir.exists(outputDirectory)) dir.create(outputDirectory)
-
-  for (i in 1:length(output)){
-    OutputFileName <- file.path(outputDirectory, paste0('out_var_', i, '.txt'))
-
-    if (firstRun){file.create(OutputFileName)}
-
-    # write simulation number
-    write.table(as.character(simulationNumber), OutputFileName, append = TRUE,
-                row.names = FALSE, col.names = FALSE)
-
-    # write simulated data
-    write.table(output[[i]], OutputFileName, append = TRUE,sep = '\t',
-                row.names = FALSE, col.names = FALSE)
-
-  }
-}
 }
