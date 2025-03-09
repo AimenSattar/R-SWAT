@@ -49,7 +49,7 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     mutate(id= as.numeric(id))
     
     # Join irrigation and HRU data using dplyr inner_join
-    result <- irrigation %>%
+    output <- irrigation %>%
       dplyr::inner_join(hru_filtered, by = c("unit" = "id")) %>%
       dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
       dplyr::select(unit, yr, irr, lu_mgt)
