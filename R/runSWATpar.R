@@ -84,7 +84,10 @@ runSWATpar <- function(workingDirectory,
     core <- NA
     cl <- parallel::makeCluster(ncores)
     doParallel::registerDoParallel(cl)
-    foreach::foreach(core = 1:ncores, .combine = 'c') %dopar% {
+        # Add the .packages parameter to foreach to ensure dplyr is available
+    foreach::foreach(core = 1:ncores, 
+                     .combine = 'c', 
+                     .packages = c('dplyr', 'tidyr', 'readr')) %dopar% {
      
       runSWATSequential(core,
                         workingDirectory,
