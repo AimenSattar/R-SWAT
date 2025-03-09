@@ -78,7 +78,8 @@ runSWATpar <- function(workingDirectory,
                       fileCioInfo,
                       fromToDate,
                       firstRun,
-                      readOutputScript)
+                      readOutputScript,
+                      originalTxtInOut = TxtInOutFolder)  # Pass original folder
   } else {
     core <- NA
     cl <- parallel::makeCluster(ncores)
@@ -95,13 +96,14 @@ runSWATpar <- function(workingDirectory,
                         fileCioInfo,
                         fromToDate,
                         firstRun,
-                        readOutputScript)
+                        readOutputScript,
+                        originalTxtInOut = TxtInOutFolder)  # Pass original folder
 
     }
     parallel::stopCluster(cl)
   }
-
 }
+
 
 #------------------------------------------------------------------------------#
 #                           Run SWAT in sequential                             #
@@ -146,8 +148,8 @@ runSWATSequential <- function(coreNumber,
                               fileCioInfo,
                               fromToDate,
                               firstRun,
-                              readOutputScript = NULL){
-
+                              readOutputScript = NULL,
+                              originalTxtInOut = NULL){  # Add this parameter
 
   if (!is.null(readOutputScript)){
     source(readOutputScript)
@@ -169,19 +171,17 @@ runSWATSequential <- function(coreNumber,
   # Loop over number of parameter sets
   for (i in 1:nrow(subParameterSet)) {
     
-  setwd(paste0(workingDirectory,'/TxtInOut_', coreNumber))
+    setwd(paste0(workingDirectory,'/TxtInOut_', coreNumber))
 
-  
     # If this is SWAT project
     if (isTRUE(caliParam$file[1] != "calibration.cal")){
-
       # Assign parameter values to caliParam
       caliParam$applyValue <- getParameterValue(caliParam$paramFlag,
-                                                subParameterSet[i,2:nParam])
+                                              subParameterSet[i,2:nParam])
     }
 
-    # Update TxtInOut folder
-    updateMultiFile(toDir, caliParam, subParameterSet[i,2:nParam], paraSelection)
+    # Update TxtInOut folder, passing original directory 
+    updateMultiFile(toDir, caliParam, subParameterSet[i,2:nParam], paraSelection, fromDir = originalTxtInOut)
 
     # Copy swat.exe file (only if it was not there yet)
     exeFile <- basename(swatExe)
@@ -277,13 +277,26 @@ getParameterValue <- function(parameter, parameterValue){
 #' @export
 #'
 #'
-updateMultiFile <-  function(toDir, caliParam, parameterValue, paraSelection){
+updateMultiFile <- function(toDir, caliParam, parameterValue, paraSelection, fromDir = NULL){
 
   # If this is SWAT+ project
   if (isTRUE(caliParam$file == "calibration.cal")){
+    # Check if calibration.cal exists in original TxtInOut folder
+    originalCalFile <- NULL
+    
+    # If fromDir is provided, check for calibration.cal in the original folder
+    if (!is.null(fromDir) && file.exists(file.path(fromDir, "calibration.cal"))) {
+      originalCalFile <- file.path(fromDir, "calibration.cal")
+      # Copy the file to destination directory first if it doesn't exist there
+      if (!file.exists(file.path(toDir, "calibration.cal"))) {
+        file.copy(originalCalFile, toDir)
+      }
+    }
+    
+    # Now update the calibration file
     updateCalibrationFile(paraSelection, parameterValue, toDir)
 
-    # If this is SWAT project
+  # If this is SWAT project
   } else {
     # Loop over list of files
     for (i in 1:length(caliParam$file)){
@@ -301,6 +314,7 @@ updateMultiFile <-  function(toDir, caliParam, parameterValue, paraSelection){
     }
   }
 }
+
 
 #------------------------------------------------------------------------------#
 #                         updateSingleFile                                      #
