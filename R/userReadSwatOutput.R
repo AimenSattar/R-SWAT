@@ -13,32 +13,25 @@
 #'
 #' @export
 
-library(dplyr)
 
 userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
+  # Explicitly load required package
+  library(dplyr)
+  
   if (fileName == "basin_crop_yld_yr.txt") {
     filePath <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), fileName)
     
-    # Read the file lines to handle header/unit row issues
+    # Read all lines to handle SWAT+ header structure
     lines <- readLines(filePath)
     
-    # Skip the header line (first line)
     if (length(lines) > 2) {
-      # Create a temporary file without the first line (SWAT+ header)
+      # Create a temporary file without header and unit rows
       tempFile <- tempfile()
       writeLines(lines[-1], tempFile)
       
-      # Read with fill=TRUE to handle mismatched columns
-      output <- try(read.table(tempFile, header = TRUE, fill = TRUE), silent = TRUE)
+      # Read data skipping the units row
+      output <- read.table(tempFile, header = TRUE, skip = 1, fill = TRUE)
       unlink(tempFile)
-      
-      # Also remove the unit row (now the first row after reading)
-      if (!inherits(output, "try-error") && nrow(output) > 0) {
-        output <- output[-1, ]
-      } else {
-        warning(paste("Could not properly read", fileName))
-        return(data.frame())
-      }
     } else {
       warning(paste("File has insufficient content:", filePath))
       return(data.frame())
@@ -46,22 +39,27 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     
     return(output)
   } else {
-    # Read irrigation file using the same robust approach
+    # For irrigation data (lsunit file)
     filePath <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), fileName)
+    
+    # Read all lines
     lines <- readLines(filePath)
     
     if (length(lines) > 2) {
+      # Create a temporary file without header
       tempFile <- tempfile()
       writeLines(lines[-1], tempFile)
-      irrigation <- try(read.table(tempFile, header = TRUE, fill = TRUE), silent = TRUE)
+      
+      # Read data skipping the units row
+      irrigation <- read.table(tempFile, header = TRUE, skip = 1, fill = TRUE)
       unlink(tempFile)
       
-      if (!inherits(irrigation, "try-error") && "yr" %in% colnames(irrigation) && 
-          "unit" %in% colnames(irrigation) && "irr" %in% colnames(irrigation)) {
-        irrigation <- irrigation[-1, ] # Remove unit row
-        irrigation <- irrigation %>% select(yr, unit, irr)
+      # Select needed columns - using explicit namespace reference
+      if (all(c("yr", "unit", "irr") %in% colnames(irrigation))) {
+        irrigation <- dplyr::select(irrigation, yr, unit, irr)
       } else {
-        warning(paste("Failed to correctly parse irrigation file:", fileName))
+        warning(paste("Missing required columns in irrigation file:", 
+                     paste(setdiff(c("yr", "unit", "irr"), colnames(irrigation)), collapse=", ")))
         return(data.frame())
       }
     } else {
@@ -69,22 +67,32 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
       return(data.frame())
     }
     
-    # Read HRU file with the same robust approach
+    # Read HRU file
     hru_file <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), "hru-data.hru")
     hru_lines <- readLines(hru_file)
     
     if (length(hru_lines) > 3) {
+      # Identify header line position - SWAT+ header can vary
+      header_line_idx <- grep("id\\s+name", hru_lines)[1]
+      if (is.na(header_line_idx)) {
+        header_line_idx <- 2 # Default if not found
+      }
+      
+      # Create a temporary file with just data and header
       tempFile <- tempfile()
-      writeLines(hru_lines[-(1:2)], tempFile) # Skip first two rows
-      hru <- try(read.table(tempFile, header = TRUE, fill = TRUE), silent = TRUE)
+      writeLines(hru_lines[c(header_line_idx, (header_line_idx+2):length(hru_lines))], tempFile)
+      
+      # Read HRU data
+      hru <- read.table(tempFile, header = TRUE, fill = TRUE)
       unlink(tempFile)
       
-      if (!inherits(hru, "try-error") && "id" %in% colnames(hru) && "lu_mgt" %in% colnames(hru)) {
+      # Filter and select needed columns
+      if (all(c("id", "lu_mgt") %in% colnames(hru))) {
         hru_filtered <- hru %>%
-          select(id, lu_mgt) %>%
-          filter(!lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum"))
+          dplyr::select(id, lu_mgt) %>%
+          dplyr::filter(!lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum"))
       } else {
-        warning("Failed to correctly parse HRU file")
+        warning("Missing required columns in HRU file")
         return(data.frame())
       }
     } else {
@@ -93,20 +101,16 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     }
     
     # Match irrigation data with filtered HRU data
-    output <- try({
+    output <- tryCatch({
       irrigation %>%
-        inner_join(hru_filtered, by = c("unit" = "id")) %>%
-        mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
-        select(unit, yr, irr, lu_mgt)
-    }, silent = TRUE)
-    
-    if (inherits(output, "try-error")) {
-      warning("Failed to join irrigation and HRU data")
+        dplyr::inner_join(hru_filtered, by = c("unit" = "id")) %>%
+        dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
+        dplyr::select(unit, yr, irr, lu_mgt)
+    }, error = function(e) {
+      warning(paste("Error joining irrigation and HRU data:", e$message))
       return(data.frame())
-    }
+    })
     
     return(output)
   }
 }
-
-  
