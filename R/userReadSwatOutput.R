@@ -15,102 +15,100 @@
 
 
 userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
-  # Explicitly load required package
-  library(dplyr)
-  
   if (fileName == "basin_crop_yld_yr.txt") {
     filePath <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), fileName)
     
-    # Read all lines to handle SWAT+ header structure
+    # Read all lines of the file
     lines <- readLines(filePath)
     
-    if (length(lines) > 2) {
-      # Create a temporary file without header and unit rows
-      tempFile <- tempfile()
-      writeLines(lines[-1], tempFile)
-      
-      # Read data skipping the units row
-      output <- read.table(tempFile, header = TRUE, skip = 1, fill = TRUE)
-      unlink(tempFile)
-    } else {
+    if (length(lines) <= 2) {
       warning(paste("File has insufficient content:", filePath))
       return(data.frame())
     }
     
-    return(output)
+    # Create temporary file skipping the header line
+    tempFile <- tempfile()
+    writeLines(lines[-1], tempFile)
+    
+    # Read the file with fill=TRUE to handle column mismatches
+    # Skip the units row (which is now the first row in the temp file)
+    df <- try(read.table(tempFile, header = TRUE, skip = 1, fill = TRUE), silent = TRUE)
+    unlink(tempFile)
+    
+    if (inherits(df, "try-error")) {
+      warning(paste("Failed to read file:", fileName))
+      return(data.frame())
+    }
+    
+    return(df)
   } else {
-    # For irrigation data (lsunit file)
+    # For irrigation file
     filePath <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), fileName)
-    
-    # Read all lines
     lines <- readLines(filePath)
     
-    if (length(lines) > 2) {
-      # Create a temporary file without header
-      tempFile <- tempfile()
-      writeLines(lines[-1], tempFile)
-      
-      # Read data skipping the units row
-      irrigation <- read.table(tempFile, header = TRUE, skip = 1, fill = TRUE)
-      unlink(tempFile)
-      
-      # Select needed columns - using explicit namespace reference
-      if (all(c("yr", "unit", "irr") %in% colnames(irrigation))) {
-        irrigation <- dplyr::select(irrigation, yr, unit, irr)
-      } else {
-        warning(paste("Missing required columns in irrigation file:", 
-                     paste(setdiff(c("yr", "unit", "irr"), colnames(irrigation)), collapse=", ")))
-        return(data.frame())
-      }
-    } else {
+    if (length(lines) <= 2) {
       warning(paste("File has insufficient content:", filePath))
       return(data.frame())
     }
     
-    # Read HRU file
+    # Process lsunit file
+    tempFile <- tempfile()
+    writeLines(lines[-1], tempFile)
+    
+    # Skip the units row and use fill=TRUE
+    irrigation <- try(read.table(tempFile, header = TRUE, skip = 1, fill = TRUE), silent = TRUE)
+    unlink(tempFile)
+    
+    if (inherits(irrigation, "try-error") || 
+        !all(c("yr", "unit", "irr") %in% colnames(irrigation))) {
+      warning(paste("Failed to read irrigation data properly from:", fileName))
+      return(data.frame())
+    }
+    
+    # Select columns explicitly to avoid dplyr dependency issues
+    irrigation <- irrigation[, c("yr", "unit", "irr")]
+    
+    # Process HRU file with the same approach
     hru_file <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), "hru-data.hru")
     hru_lines <- readLines(hru_file)
     
-    if (length(hru_lines) > 3) {
-      # Identify header line position - SWAT+ header can vary
-      header_line_idx <- grep("id\\s+name", hru_lines)[1]
-      if (is.na(header_line_idx)) {
-        header_line_idx <- 2 # Default if not found
-      }
-      
-      # Create a temporary file with just data and header
-      tempFile <- tempfile()
-      writeLines(hru_lines[c(header_line_idx, (header_line_idx+2):length(hru_lines))], tempFile)
-      
-      # Read HRU data
-      hru <- read.table(tempFile, header = TRUE, fill = TRUE)
-      unlink(tempFile)
-      
-      # Filter and select needed columns
-      if (all(c("id", "lu_mgt") %in% colnames(hru))) {
-        hru_filtered <- hru %>%
-          dplyr::select(id, lu_mgt) %>%
-          dplyr::filter(!lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum"))
-      } else {
-        warning("Missing required columns in HRU file")
-        return(data.frame())
-      }
-    } else {
+    if (length(hru_lines) <= 3) {
       warning(paste("HRU file has insufficient content:", hru_file))
       return(data.frame())
     }
     
-    # Match irrigation data with filtered HRU data
-    output <- tryCatch({
-      irrigation %>%
-        dplyr::inner_join(hru_filtered, by = c("unit" = "id")) %>%
-        dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
-        dplyr::select(unit, yr, irr, lu_mgt)
-    }, error = function(e) {
-      warning(paste("Error joining irrigation and HRU data:", e$message))
-      return(data.frame())
-    })
+    # Find the header line
+    header_line <- grep("id\\s+name", hru_lines)[1]
+    if (is.na(header_line)) header_line <- 2 # Default if not found
     
-    return(output)
+    # Extract relevant lines
+    hru_data_lines <- c(hru_lines[header_line], hru_lines[(header_line+2):length(hru_lines)])
+    
+    tempFile <- tempfile()
+    writeLines(hru_data_lines, tempFile)
+    
+    hru <- try(read.table(tempFile, header = TRUE, fill = TRUE), silent = TRUE)
+    unlink(tempFile)
+    
+    if (inherits(hru, "try-error") || 
+        !all(c("id", "lu_mgt") %in% colnames(hru))) {
+      warning("Failed to read HRU data properly")
+      return(data.frame())
+    }
+    
+    # Filter without dplyr
+    hru_filtered <- hru[!(hru$lu_mgt %in% c("wetw_lum", "wetn_lum", "bsvg_lum", "urhd_lum", "swrn_lum")), 
+                        c("id", "lu_mgt")]
+    
+    # Join data manually to avoid dplyr dependencies
+    merged <- merge(irrigation, hru_filtered, by.x = "unit", by.y = "id")
+    
+    # Remove _lum suffix
+    merged$lu_mgt <- gsub("_lum$", "", merged$lu_mgt)
+    
+    # Select final columns
+    result <- merged[, c("unit", "yr", "irr", "lu_mgt")]
+    
+    return(result)
   }
 }
