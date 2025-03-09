@@ -21,9 +21,8 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
     # Read directly using the simplified approach
     df <- read.table(filePath, header = FALSE, stringsAsFactors = FALSE, fill = TRUE, skip = 1)
     colnames(df) <- df[1,]
-    df <- df[-1,]
-    
-    return(df)
+    output <- df[-1,]
+    return(output)
   } else {
     # For irrigation file (lsunit_wb_yr.txt)
     filePath <- paste0(workingDirectory, paste0("/TxtInOut_", coreNumber, "/"), fileName)
@@ -53,6 +52,11 @@ userReadSwatOutput <- function(workingDirectory, coreNumber, fileName, output) {
       dplyr::inner_join(hru_filtered, by = c("unit" = "id")) %>%
       dplyr::mutate(lu_mgt = gsub("_lum$", "", lu_mgt)) %>%
       dplyr::select(unit, yr, irr, lu_mgt)
+
+        # Group by lu_mgt and year, calculate average irrigation
+    output <- output %>%
+      dplyr::group_by(lu_mgt, yr) %>%
+      dplyr::summarize(irr = mean(irr, na.rm = TRUE), .groups = "drop")
     
     return(output)
   }
